@@ -1,0 +1,21 @@
+package com.ayan.answerpass.constant;
+
+/**
+ * 通用常量
+ *
+ * @author <a href="#">程序员沈笙</a>
+ * @from <a href="https://#.icu">编程导航知识星球</a>
+ */
+public interface CommonConstant {
+
+    /**
+     * 升序
+     */
+    String SORT_ORDER_ASC = "ascend";
+
+    /**
+     * 降序
+     */
+    String SORT_ORDER_DESC = " descend";
+    
+}
