@@ -1,7 +1,6 @@
 <template>
   <div id="xxPage">
-    <h1>About</h1>
-    <p>AnswerPass is a web application that allows users to answer questions using AI.</p>
+    <p>登录页面</p>
   </div>
 </template>
 
