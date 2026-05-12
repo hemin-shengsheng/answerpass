@@ -1,9 +1,16 @@
+<template>
+  <div id="xxPage">
+    <h1>home</h1>
+    <p>项目首页</p>
+  </div>
+</template>
+
 <script setup lang="ts">
-import TheWelcome from '../components/TheWelcome.vue'
+
 </script>
 
-<template>
-  <main>
-    <TheWelcome />
-  </main>
-</template>
+<style scoped>
+#xxPage {
+}
+
+</style>
