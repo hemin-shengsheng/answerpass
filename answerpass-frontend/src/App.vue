@@ -14,4 +14,10 @@
 import { useRoute } from "vue-router";
 import BasicLayout from "./layouts/BasicLayout.vue";
 const route = useRoute();
+import { useLoginUserStore } from "./stores/userStore";
+
+const loginUserStore=useLoginUserStore();
+loginUserStore.fetchLoginUser();
+
+
 </script>

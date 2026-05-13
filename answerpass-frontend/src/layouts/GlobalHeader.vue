@@ -14,7 +14,10 @@
       </a-menu>
     </a-col>
     <a-col flex="100px">
-      <div>
+      <div v-if="loginUserStore.loginUser.id">
+        {{ loginUserStore.loginUser.userName??"无名" }}
+      </div>
+      <div v-else>
         <a-button type="primary" href="/user/login">登录</a-button>
       </div>
     </a-col>
@@ -24,6 +27,9 @@
 import { ref } from 'vue';
 import { routes } from '../router/routes';
 import { useRouter } from 'vue-router';
+import { useLoginUserStore } from "../stores/userStore";
+
+const loginUserStore=useLoginUserStore();
 const router = useRouter();
 const visibleRouter = routes.filter((item) => item.meta?.hideInMenu !== true);
 const selectedKeys = ref(['/']);
