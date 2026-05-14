@@ -13,11 +13,18 @@
 
 import { useRoute } from "vue-router";
 import BasicLayout from "./layouts/BasicLayout.vue";
+import { onMounted } from "vue";
+
 const route = useRoute();
-import { useLoginUserStore } from "./stores/userStore";
 
-const loginUserStore=useLoginUserStore();
-loginUserStore.fetchLoginUser();
-
+/**
+ * 全局初始化函数，所有全局单次调用的代码，都可以写在这里
+ */
+const doInit=()=>{
+  console.log("hello 欢迎来到我的项目");
+}
+onMounted(()=>{
+  doInit();
+})
 
 </script>

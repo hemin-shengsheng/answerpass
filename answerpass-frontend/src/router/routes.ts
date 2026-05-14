@@ -31,6 +31,9 @@ export const routes: Array<RouteRecordRaw> = [
     path: "/noAuth",
     name: "未授权",
     component: () =>import("../views/NoAuth.vue"),
+    meta:{
+      hideInMenu:true,
+    }
   },
   {
     path: "/user",
