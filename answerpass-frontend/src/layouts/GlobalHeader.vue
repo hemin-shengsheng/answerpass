@@ -28,10 +28,24 @@ import { ref } from 'vue';
 import { routes } from '../router/routes';
 import { useRouter } from 'vue-router';
 import { useLoginUserStore } from "../stores/userStore";
+import { computed } from 'vue';
+import checkAccess from '@/access/checkAccess';
 
 const loginUserStore=useLoginUserStore();
 const router = useRouter();
-const visibleRouter = routes.filter((item) => item.meta?.hideInMenu !== true);
+const visibleRouter = computed(()=>{
+  return routes.filter((item) =>{
+  // 显示在菜单中的路由数组
+  if(item.meta?.hideInMenu){
+    return false;
+  }
+  // 根据权限过滤菜单
+  if(!checkAccess(loginUserStore.loginUser,item.meta?.access as string)){
+    return false;
+  }
+  return true;
+});
+})
 const selectedKeys = ref(['/']);
 router.afterEach((to) => {
   selectedKeys.value = [to.path];
