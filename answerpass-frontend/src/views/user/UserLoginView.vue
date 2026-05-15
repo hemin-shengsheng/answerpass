@@ -60,8 +60,18 @@ const handleSubmit = async () => {
   if (res.data.code === 0) {
     await loginUserStore.fetchLoginUser();
     message.success("登录成功");
+    const redirect = router.currentRoute.value.query.redirect as string;
+    let targetPath="/";
+    if(redirect){
+      if(redirect.startsWith("http")){
+        const url=new URL(redirect);
+        targetPath=url.pathname;
+      }else{
+        targetPath=redirect;
+      }
+    }
     router.push({
-      path: "/",
+      path: targetPath,
       replace: true,
     });
   } else {

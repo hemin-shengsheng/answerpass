@@ -25,7 +25,14 @@ export const routes: Array<RouteRecordRaw> = [
     component: HomeView,
     meta:{
         access:ACCESS_ENUM.ADMIN,
-    }
+    },
+    children:[
+      {
+      path:"/admin/user",
+      name:"用户管理",
+      component:()=>import("../views/admin/AdminUserView.vue")
+    },
+    ]
   },
   {
     path: "/noAuth",
@@ -33,7 +40,7 @@ export const routes: Array<RouteRecordRaw> = [
     component: () =>import("../views/NoAuth.vue"),
     meta:{
       hideInMenu:true,
-    }
+    },
   },
   {
     path: "/user",
