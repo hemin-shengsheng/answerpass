@@ -61,7 +61,7 @@ const router = useRouter();
  */
 const handleSubmit = async () => {
   const res = await userRegisterUsingPost(form);
-  // 登录成功，跳转到主页
+  // 注册成功，跳转到登录页
   if (res.data.code === 0) {
     message.success("注册成功");
     router.push({
