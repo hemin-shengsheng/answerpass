@@ -22,11 +22,15 @@ export const routes: Array<RouteRecordRaw> = [
   },{
     path: "/admin",
     name: "管理员页面",
-    component: HomeView,
+    component: ()=>import("../views/admin/AdminLayoutl.vue"),
     meta:{
         access:ACCESS_ENUM.ADMIN,
     },
     children:[
+      {
+        path:"",
+        redirect:"/admin/user",
+      },
       {
       path:"/admin/user",
       name:"用户管理",
