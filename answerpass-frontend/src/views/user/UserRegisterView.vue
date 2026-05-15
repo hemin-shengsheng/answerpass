@@ -23,10 +23,16 @@
           placeholder="请输入确认密码"
         />
       </a-form-item>
-      <a-form-item>
-        <a-button type="primary" html-type="submit" style="width: 120px">
+        <a-form-item>
+        <div style="display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;">
+          <a-button type="primary" html-type="submit" style="width: 120px">
           注册
         </a-button>
+        <router-link to="/user/login" >老用户登录</router-link>
+        </div>
       </a-form-item>
     </a-form>
   </div>
