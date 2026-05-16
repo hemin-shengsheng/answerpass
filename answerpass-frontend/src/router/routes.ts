@@ -29,13 +29,33 @@ export const routes: Array<RouteRecordRaw> = [
     children:[
       {
         path:"",
-        redirect:"/admin/user",
+        redirect:"/admin/user_answer",
       },
       {
       path:"/admin/user",
       name:"用户管理",
-      component:()=>import("../views/admin/AdminUserView.vue")
+      component:()=>import("../views/admin/AdminUserView.vue"),
     },
+    {
+      path:"/admin/app",
+      name:"应用管理",
+      component:()=>import("../views/admin/AdminAppview.vue"),
+    },
+    {
+      path:"/admin/question",
+      name:"题目管理",
+      component:()=>import("../views/admin/AdminQuestionView.vue"),
+    },
+    {
+      path:"/admin/scoring_result",
+      name:"评分管理",
+      component:()=>import("../views/admin/AdminScoringResultView.vue"),
+    },
+    {
+      path:"/admin/user_answer",
+      name:"回答管理",
+      component:()=>import("../views/admin/AdminUserAnswerView.vue"),
+    }
     ]
   },
   {

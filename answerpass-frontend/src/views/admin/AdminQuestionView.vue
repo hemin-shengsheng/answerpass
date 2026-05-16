@@ -5,13 +5,17 @@
     layout="inline"
     @submit="doSearch"
   >
-    <a-form-item field="userName" label="用户名">
-      <a-input v-model="formSearchParams.userName" placeholder="请输入用户名" allow-clear />
-    </a-form-item>
-    <a-form-item field="userProfile" label="用户简介">
+    <a-form-item field="appId" label="应用 id">
       <a-input
-        v-model="formSearchParams.userProfile"
-        placeholder="请输入用户简介"
+        v-model="formSearchParams.appId"
+        placeholder="请输入应用 id"
+        allow-clear
+      />
+    </a-form-item>
+    <a-form-item field="userId" label="用户 id">
+      <a-input
+        v-model="formSearchParams.userId"
+        placeholder="请输入用户 id"
         allow-clear
       />
     </a-form-item>
@@ -32,8 +36,13 @@
     }"
     @page-change="onPageChange"
   >
-    <template #userAvatar="{ record }">
-      <a-image width="64" :src="record.userAvatar" />
+    <template #questionContent="{ record }">
+      <div
+        v-for="question in JSON.parse(record.questionContent)"
+        :key="question.title"
+      >
+        {{ question }}
+      </div>
     </template>
     <template #createTime="{ record }">
       {{ dayjs(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
@@ -52,31 +61,31 @@
 <script setup lang="ts">
 import { ref, watchEffect } from "vue";
 import {
-  deleteUserUsingPost,
-  listUserByPageUsingPost,
-} from "@/api/userController";
+  deleteQuestionUsingPost,
+  listQuestionByPageUsingPost,
+} from "@/api/questionController";
 import message from "@arco-design/web-vue/es/message";
 import { dayjs } from "@arco-design/web-vue/es/_utils/date";
 
-const formSearchParams = ref<API.UserQueryRequest>({});
+const formSearchParams = ref<API.ScoringResultQueryRequest & { userId?: string; appId?: string }>({});
 
 // 初始化搜索条件（不应该被修改）
 const initSearchParams = {
   current: 1,
   pageSize: 10,
 };
-// 避免用户输入一个字发一个请求，也可以用防抖处理
-const searchParams = ref<API.UserQueryRequest>({
+
+const searchParams = ref<API.QuestionQueryRequest>({
   ...initSearchParams,
 });
-const dataList = ref<API.User[]>([]);
+const dataList = ref<API.Question[]>([]);
 const total = ref<number>(0);
 
 /**
  * 加载数据
  */
 const loadData = async () => {
-  const res = await listUserByPageUsingPost(searchParams.value);
+  const res = await listQuestionByPageUsingPost(searchParams.value);
   if (res.data.code === 0) {
     dataList.value = res.data.data?.records || [];
     total.value = res.data.data?.total || 0;
@@ -90,8 +99,14 @@ const loadData = async () => {
  */
 const doSearch = () => {
   searchParams.value = {
-    ...initSearchParams,//从第一页开始搜索并显示
+    ...initSearchParams,
     ...formSearchParams.value,
+    userId: formSearchParams.value.userId
+      ? Number(formSearchParams.value.userId)
+      : undefined,
+    appId: formSearchParams.value.appId
+      ? Number(formSearchParams.value.appId)
+      : undefined,
   };
 };
 
@@ -110,12 +125,12 @@ const onPageChange = (page: number) => {
  * 删除
  * @param record
  */
-const doDelete = async (record: API.User) => {
+const doDelete = async (record: API.Question) => {
   if (!record.id) {
     return;
   }
 
-  const res = await deleteUserUsingPost({
+  const res = await deleteQuestionUsingPost({
     id: record.id,
   });
   if (res.data.code === 0) {
@@ -139,25 +154,17 @@ const columns = [
     dataIndex: "id",
   },
   {
-    title: "账号",
-    dataIndex: "userAccount",
+    title: "题目内容",
+    dataIndex: "questionContent",
+    slotName: "questionContent",
   },
   {
-    title: "用户名",
-    dataIndex: "userName",
+    title: "应用 id",
+    dataIndex: "appId",
   },
   {
-    title: "用户头像",
-    dataIndex: "userAvatar",
-    slotName: "userAvatar",
-  },
-  {
-    title: "用户简介",
-    dataIndex: "userProfile",
-  },
-  {
-    title: "权限",
-    dataIndex: "userRole",
+    title: "用户 id",
+    dataIndex: "userId",
   },
   {
     title: "创建时间",
