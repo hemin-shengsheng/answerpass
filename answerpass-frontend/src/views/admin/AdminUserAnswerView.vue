@@ -86,7 +86,7 @@ type NumberKeyMap = { [key: number]: string };
 const AppTypeMap: NumberKeyMap = APP_TYPE_MAP;
 const AppScoringStrategyMap: NumberKeyMap = APP_SCORING_STRATEGY_MAP;
 
-const formSearchParams = ref<API.ScoringResultQueryRequest & { userId?: string; appId?: string }>({});
+const formSearchParams = ref<Omit<API.UserAnswerQueryRequest, "userId" | "appId"> & { userId?: string; appId?: string }>({});
 
 // 初始化搜索条件（不应该被修改）
 const initSearchParams = {
