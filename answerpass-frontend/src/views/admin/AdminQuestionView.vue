@@ -67,7 +67,7 @@ import {
 import message from "@arco-design/web-vue/es/message";
 import { dayjs } from "@arco-design/web-vue/es/_utils/date";
 
-const formSearchParams = ref<API.ScoringResultQueryRequest & { userId?: string; appId?: string }>({});
+const formSearchParams = ref<API.QuestionQueryRequest & { userId?: string; appId?: string }>({});
 
 // 初始化搜索条件（不应该被修改）
 const initSearchParams = {
