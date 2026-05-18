@@ -4,7 +4,7 @@ import  ACCESS_ENUM  from "../access/accessEnum";
 export const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
-    name: "home",
+    name: "主页",
     component: HomeView,
   },
   {
@@ -29,7 +29,7 @@ export const routes: Array<RouteRecordRaw> = [
     children:[
       {
         path:"",
-        redirect:"/admin/user_answer",
+        redirect:"/admin/user",
       },
       {
       path:"/admin/user",

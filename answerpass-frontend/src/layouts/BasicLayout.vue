@@ -1,10 +1,10 @@
 <template>
   <div id="basicLayout">
-    <a-layout style="height: 400px;">
+    <a-layout >
       <a-layout-header>
         <GlobalHeader/>
       </a-layout-header>
-      <a-layout-content>
+      <a-layout-content class="content">
         <router-view/>
       </a-layout-content>
       <a-layout-footer class="footer">
@@ -20,19 +20,23 @@ import GlobalHeader from './GlobalHeader.vue';
 
 <style scoped>
 #basicLayout {
+  min-height: 100vh;
 }
-#basicLayout .footer {
+.footer {
     background-color: antiquewhite;
     padding: 16px;
-    position:fixed;
     bottom: 0;
     left: 0;
     right: 0;
     text-align: center;
 }
-#basicLayout .content {
-    background-color: linear-gradient(to right, #fefefe, #fff)  ;
-    margin-bottom: 28px;
+.content {
+    background-color: linear-gradient(to right, #fefefe, #fff);
+    max-width: 1200px;
+    width: 100%;
+    margin:0 auto;
+    box-sizing: border-box;
+    margin:0 auto 28px;
     padding: 20px;
 }
 </style>
