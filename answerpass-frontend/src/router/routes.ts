@@ -13,13 +13,15 @@ export const routes: Array<RouteRecordRaw> = [
     component: () =>import("../views/AboutView.vue"),
   },
   {
-    path: "/hide",
-    name:"隐藏页面",
-    component: HomeView,
-    meta:{
-        hideInMenu:true,
-    }
-  },{
+  path: "/app/detail/:id",
+  name: "应用详情",
+  component: ()=>import("@/views/app/AppDetailView.vue"),
+  props: true,
+  meta: {
+    hideInMenu: true,
+  },
+},
+  {
     path: "/admin",
     name: "管理员页面",
     component: ()=>import("../views/admin/AdminLayoutl.vue"),

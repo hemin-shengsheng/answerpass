@@ -1,15 +1,10 @@
 <template>
-  <div id="xxPage">
-
-  </div>
+  <div id="xxPage"></div>
 </template>
 
-<script setup lang="ts">
-
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 #xxPage {
 }
-
 </style>
