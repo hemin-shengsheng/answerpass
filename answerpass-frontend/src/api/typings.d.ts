@@ -59,7 +59,7 @@ declare namespace API {
     appIcon?: string;
     appName?: string;
     appType?: number;
-    id?: number;
+    id?: number|string;
     scoringStrategy?: number;
   };
 
@@ -285,7 +285,7 @@ declare namespace API {
 
   type getAppVOByIdUsingGETParams = {
     /** id */
-    id?: number;
+    id?: number|string;
   };
 
   type getPostVOByIdUsingGETParams = {
