@@ -300,7 +300,7 @@ declare namespace API {
 
   type getScoringResultVOByIdUsingGETParams = {
     /** id */
-    id?: number;
+    id?: string;
   };
 
   type getUserAnswerVOByIdUsingGETParams = {
@@ -650,7 +650,7 @@ declare namespace API {
   };
 
   type ScoringResultAddRequest = {
-    appId?: number;
+    appId?: number|string;
     resultDesc?: string;
     resultName?: string;
     resultPicture?: string;
@@ -659,7 +659,7 @@ declare namespace API {
   };
 
   type ScoringResultEditRequest = {
-    id?: number;
+    id?: number|string;
     resultDesc?: string;
     resultName?: string;
     resultPicture?: string;
@@ -668,7 +668,7 @@ declare namespace API {
   };
 
   type ScoringResultQueryRequest = {
-    appId?: number;
+    appId?: number|string;
     current?: number;
     id?: number;
     notId?: number;
@@ -696,7 +696,7 @@ declare namespace API {
   type ScoringResultVO = {
     appId?: number;
     createTime?: string;
-    id?: number;
+    id?: number|string;
     resultDesc?: string;
     resultName?: string;
     resultPicture?: string;
