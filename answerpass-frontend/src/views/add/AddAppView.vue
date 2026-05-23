@@ -89,37 +89,13 @@ const oldApp = ref<API.AppVO>();
 /**
  * 加载数据
  */
-// const loadData = async () => {
-//     if(!props.id){
-//         return;
-//     }
-//   const res = await getAppVoByIdUsingGet({
-//     id: Number(props.id),
-//   });
-//   if (res.data.code === 0 && res.data.data) {
-//     oldApp.value = res.data.data;
-//     form.value=res.data.data;
-//   } else {
-//     message.error('获取数据失败，' + res.data.message);
-//   }
-// };
 const loadData = async () => {
-    console.log('=== loadData 调试 ===');
-    console.log('props.id 原始值:', props.id);
-    console.log('Number(props.id):', Number(props.id));
-    console.log('!!props.id:', !!props.id);
-    
     if(!props.id){
-        console.log('props.id 为空，跳过加载');
         return;
     }
-    
     const res = await getAppVoByIdUsingGet({
       id: props.id,
     });
-    
-    console.log('接口返回:', res.data);
-    
     if (res.data.code === 0 && res.data.data) {
       oldApp.value = res.data.data;
       form.value = res.data.data;

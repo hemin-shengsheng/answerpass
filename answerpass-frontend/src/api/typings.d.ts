@@ -588,7 +588,7 @@ declare namespace API {
   };
 
   type QuestionAddRequest = {
-    appId?: number;
+    appId?: number|string;
     questionContent?: QuestionContentDTO[];
   };
 
@@ -603,7 +603,7 @@ declare namespace API {
   };
 
   type QuestionQueryRequest = {
-    appId?: number;
+    appId?: number|string;
     current?: number;
     id?: number;
     notId?: number;

@@ -55,7 +55,7 @@ export const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        redirect: '/admin/app',
+        redirect: '/admin/question',
       },
       {
         path: '/admin/user',
