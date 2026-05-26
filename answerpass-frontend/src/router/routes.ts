@@ -85,6 +85,44 @@ export const routes: Array<RouteRecordRaw> = [
     ],
   },
   {
+    path:"/answer/do/:appId",
+    name:"答题",
+    component:()=>import('@/views/answer/DoAnswerView.vue'),
+    props:true,
+    meta:{
+      hideInMenu:true,
+      access:ACCESS_ENUM.USER,
+    }
+  },
+    {
+    path:"/answer/do/:appId",
+    name:"答题",
+    component:()=>import('@/views/answer/DoAnswerView.vue'),
+    props:true,
+    meta:{
+      hideInMenu:true,
+      access:ACCESS_ENUM.USER,
+    }
+  },
+    {
+    path:"/answer/result/:id",
+    name:"答题结果",
+    component:()=>import('@/views/answer/AnswerResultView.vue'),
+    props:true,
+    meta:{
+      hideInMenu:true,
+      access:ACCESS_ENUM.USER,
+    }
+  },
+    {
+    path:"/answer/my",
+    name:"我的答题",
+    component:()=>import('@/views/answer/MyAnswerView.vue'),
+    meta:{
+      access:ACCESS_ENUM.USER,
+    }
+  },
+  {
     path: '/noAuth',
     name: '未授权',
     component: () => import('../views/NoAuth.vue'),

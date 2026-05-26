@@ -23,7 +23,7 @@
             {{ dayjs(data.createTime).format('YYYY-MM-DD HH:mm:ss') }}
           </p>
           <a-space size="large">
-            <a-button type="primary" :href="`/answer/do/${props.id}`">开始答题</a-button>
+            <a-button type="primary">开始答题</a-button>
             <a-button>分享应用</a-button>
             <a-button v-if="isMy" :href="`/add/question/${props.id}`">设置题目</a-button>
             <a-button v-if="isMy" :href="`/add/scoring_result/${props.id}`">设置评分</a-button>
