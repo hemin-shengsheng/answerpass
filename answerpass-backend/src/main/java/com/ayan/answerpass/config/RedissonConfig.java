@@ -1,6 +1,5 @@
 package com.ayan.answerpass.config;
 
-import com.zhipu.oapi.ClientV4;
 import lombok.Data;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
