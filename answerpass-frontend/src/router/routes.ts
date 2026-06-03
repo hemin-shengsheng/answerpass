@@ -22,28 +22,37 @@ export const routes: Array<RouteRecordRaw> = [
     },
   },
   {
-    path: '/add/app/:id?',
-    name:'创建应用',
-    component:()=>import('@/views/add/AddAppView.vue'),
-    props:true,
+    path: '/add/app',
+    name: '创建应用',
+    component: () => import('@/views/add/AddAppView.vue'),
+    props: true,
   },
   {
-    path:'/add/question/:appId',
-    name:'创建题目',
-    component:()=>import('@/views/add/AddQuestionView.vue'),
-    props:true,
-    meta:{
-      hideInMenu:true,
-    }
+    path: '/add/app/:id',
+    name: '修改应用',
+    component: () => import('@/views/add/AddAppView.vue'),
+    props: true,
+    meta: {
+      hideInMenu: true,
+    },
   },
   {
-    path:'/add/scoring_result/:appId',
-    name:'创建评分',
-    component:()=>import('@/views/add/AddScoringResultView.vue'),
-    props:true,
-    meta:{
-      hideInMenu:true,
-    }
+    path: '/add/question/:appId',
+    name: '创建题目',
+    component: () => import('@/views/add/AddQuestionView.vue'),
+    props: true,
+    meta: {
+      hideInMenu: true,
+    },
+  },
+  {
+    path: '/add/scoring_result/:appId',
+    name: '创建评分',
+    component: () => import('@/views/add/AddScoringResultView.vue'),
+    props: true,
+    meta: {
+      hideInMenu: true,
+    },
   },
   {
     path: '/admin',
@@ -55,7 +64,7 @@ export const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: '',
-        redirect: '/admin/question',
+        redirect: '/admin/app',
       },
       {
         path: '/admin/user',
@@ -85,42 +94,42 @@ export const routes: Array<RouteRecordRaw> = [
     ],
   },
   {
-    path:"/answer/do/:appId",
-    name:"答题",
-    component:()=>import('@/views/answer/DoAnswerView.vue'),
-    props:true,
-    meta:{
-      hideInMenu:true,
-      access:ACCESS_ENUM.USER,
-    }
+    path: '/answer/do/:appId',
+    name: '答题',
+    component: () => import('@/views/answer/DoAnswerView.vue'),
+    props: true,
+    meta: {
+      hideInMenu: true,
+      access: ACCESS_ENUM.USER,
+    },
   },
-    {
-    path:"/answer/do/:appId",
-    name:"答题",
-    component:()=>import('@/views/answer/DoAnswerView.vue'),
-    props:true,
-    meta:{
-      hideInMenu:true,
-      access:ACCESS_ENUM.USER,
-    }
+  {
+    path: '/answer/do/:appId',
+    name: '答题',
+    component: () => import('@/views/answer/DoAnswerView.vue'),
+    props: true,
+    meta: {
+      hideInMenu: true,
+      access: ACCESS_ENUM.USER,
+    },
   },
-    {
-    path:"/answer/result/:id",
-    name:"答题结果",
-    component:()=>import('@/views/answer/AnswerResultView.vue'),
-    props:true,
-    meta:{
-      hideInMenu:true,
-      access:ACCESS_ENUM.USER,
-    }
+  {
+    path: '/answer/result/:id',
+    name: '答题结果',
+    component: () => import('@/views/answer/AnswerResultView.vue'),
+    props: true,
+    meta: {
+      hideInMenu: true,
+      access: ACCESS_ENUM.USER,
+    },
   },
-    {
-    path:"/answer/my",
-    name:"我的答题",
-    component:()=>import('@/views/answer/MyAnswerView.vue'),
-    meta:{
-      access:ACCESS_ENUM.USER,
-    }
+  {
+    path: '/answer/my',
+    name: '我的答题',
+    component: () => import('@/views/answer/MyAnswerView.vue'),
+    meta: {
+      access: ACCESS_ENUM.USER,
+    },
   },
   {
     path: '/noAuth',
