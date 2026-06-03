@@ -2,7 +2,7 @@ import axios from "axios";
 
 const myAxios = axios.create({
   baseURL: "http://localhost:8101",
-  timeout: 10000,
+  timeout: 20000,
   withCredentials: true,// 允许跨域请求携带凭证
 });
 

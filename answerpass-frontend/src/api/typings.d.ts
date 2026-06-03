@@ -1,6 +1,6 @@
 declare namespace API {
   type AiGenerateQuestionRequest = {
-    appId?: number;
+    appId?: string|number;
     optionNumber?: number;
     questionNumber?: number;
   };
