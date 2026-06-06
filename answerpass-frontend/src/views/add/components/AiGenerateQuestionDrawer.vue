@@ -96,15 +96,36 @@ const handleSubmit = async () => {
   }
   submitting.value = false;
 };
-/**
- * 提交 使用 SSE 实时生成
- */
-const doSSESubmit=async ()=>{
-  if(!props.appId){
-    return;
-  }
-  submitting.value=true;
-  
-  submitting.value=false;
-}
+const doSSESubmit = () => {
+  if (!props.appId) return;
+  submitting.value = true;
+
+  const questions: API.QuestionContentDTO[] = [];
+
+  const url = `http://localhost:8101/api/question/ai_generate/sse?appId=${props.appId}&questionNumber=${form.questionNumber}&optionNumber=${form.optionNumber}`;
+  const eventSource = new EventSource(url);
+
+  eventSource.addEventListener('question', (event) => {
+    console.log('收到 question 事件，原始数据:', event.data); 
+    const question = JSON.parse(event.data);
+    questions.push(question);
+    console.log('实时收到题目:', question);
+  });
+
+  eventSource.addEventListener('done', () => {
+    eventSource.close();
+    if (questions.length > 0 && props.onSuccess) {
+      props.onSuccess(questions);
+    }
+    message.success(`生成 ${questions.length} 道题目`);
+    handleCancel();
+    submitting.value = false;
+  });
+
+  eventSource.addEventListener('error', () => {
+    eventSource.close();
+    message.error('生成失败');
+    submitting.value = false;
+  });
+};
 </script>

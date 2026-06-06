@@ -323,13 +323,13 @@ public class QuestionController {
         List<QuestionContentDTO> questionContentDTOList = JSONUtil.toList(json, QuestionContentDTO.class);
         return ResultUtils.success(questionContentDTOList);
     }
-
     /**
      * AI 生成题目 - SSE 流式输出版本
+     * get方法
      */
-    @PostMapping("/ai_generate/sse")
+    @GetMapping("/ai_generate/sse")
     public SseEmitter aiGenerateQuestionSSE(
-            @RequestBody AiGenerateQuestionRequest aiGenerateQuestionRequest) {
+            AiGenerateQuestionRequest aiGenerateQuestionRequest) {
 
         ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
         Long appId = aiGenerateQuestionRequest.getAppId();
@@ -364,9 +364,10 @@ public class QuestionController {
                                     counter.decrementAndGet();
                                     if (counter.get() == 0) {
                                         try {
+                                            String compactJson = stringBuilder.toString().replaceAll("\\s+", " ");
                                             emitter.send(SseEmitter.event()
                                                     .name("question")
-                                                    .data(stringBuilder.toString()));
+                                                    .data(compactJson));
                                         } catch (IOException e) {
                                             log.error("SSE 发送失败", e);
                                         }
