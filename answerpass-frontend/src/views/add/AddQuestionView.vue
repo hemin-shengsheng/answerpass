@@ -17,7 +17,7 @@
             底部添加题目
           </a-button>
           <!-- AI生成抽屉 -->
-          <AiGenerateQuestionDrawer :appId="appId" :onSuccess="onAiGenerateSuccess" />
+          <AiGenerateQuestionDrawer :appId="appId" :onSuccess="onAiGenerateSuccess" :onQuestionGenerated="onQuestionGenerated" />
         </a-space>
         <!-- 遍历每道题目 -->
         <div v-for="(question, index) in questionContent" :key="index">
@@ -175,7 +175,9 @@ const onAiGenerateSuccess = (result: API.QuestionContentDTO[]) => {
   questionContent.value = [...questionContent.value, ...result];
   message.success(`AI 生成题目成功，已新增 ${result.length} 道题目`);
 };
-
+const onQuestionGenerated=(question:API.QuestionContentDTO)=>{
+  questionContent.value.push(question);
+}
 /**
  * 提交表单
  * @param data

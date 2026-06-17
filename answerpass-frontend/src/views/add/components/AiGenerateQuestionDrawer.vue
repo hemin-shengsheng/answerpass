@@ -46,6 +46,7 @@ import message from '@arco-design/web-vue/es/message';
 interface Props {
   appId: string;
   onSuccess?: (result: API.QuestionContentDTO[]) => void;
+  onQuestionGenerated?: (question: API.QuestionContentDTO) => void; 
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -73,7 +74,7 @@ const handleCancel = () => {
 };
 
 /**
- * 提交
+ * 同步生成
  */
 const handleSubmit = async () => {
   if (!props.appId) {
@@ -96,27 +97,31 @@ const handleSubmit = async () => {
   }
   submitting.value = false;
 };
+/**
+ * 使用 SSE 实时生成题目
+ */
 const doSSESubmit = () => {
   if (!props.appId) return;
   submitting.value = true;
 
   const questions: API.QuestionContentDTO[] = [];
 
-  const url = `http://localhost:8101/api/question/ai_generate/sse?appId=${props.appId}&questionNumber=${form.questionNumber}&optionNumber=${form.optionNumber}`;
+  const url = `http://localhost:8101/api/question/ai_generate/sse`
+  +`?appId=${props.appId}&questionNumber=${form.questionNumber}&optionNumber=${form.optionNumber}`;
   const eventSource = new EventSource(url);
 
   eventSource.addEventListener('question', (event) => {
     console.log('收到 question 事件，原始数据:', event.data); 
     const question = JSON.parse(event.data);
     questions.push(question);
+    if(props.onQuestionGenerated){
+      props.onQuestionGenerated(question);
+    }
     console.log('实时收到题目:', question);
   });
 
   eventSource.addEventListener('done', () => {
     eventSource.close();
-    if (questions.length > 0 && props.onSuccess) {
-      props.onSuccess(questions);
-    }
     message.success(`生成 ${questions.length} 道题目`);
     handleCancel();
     submitting.value = false;
