@@ -174,7 +174,8 @@ const doSubmit = async () => {
     return;
   }
   submitting.value = true;
-  const res = await addUserAnswerUsingPost({
+  try{
+    const res = await addUserAnswerUsingPost({
     appId: props.appId,
     choices: answerList,
     id: id.value,
@@ -184,6 +185,14 @@ const doSubmit = async () => {
   } else {
     message.error("提交答案失败，" + res.data.message);
   }
-  submitting.value = false;
+  }catch(error){
+    if(error instanceof Error&&error.message?.includes('fetch')){
+      message.error("网络连接失败，请检查网络后重试");
+    }else{
+      message.error("提交失败，请稍后重试");
+    }
+  }finally{
+    submitting.value=false;
+  }
 };
 </script>
