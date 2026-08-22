@@ -6,6 +6,8 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.ayan.answerpass.common.ErrorCode;
+import com.ayan.answerpass.exception.BusinessException;
 import com.ayan.answerpass.manager.AiManager;
 import com.ayan.answerpass.model.dto.question.QuestionAnswerDTO;
 import com.ayan.answerpass.model.dto.question.QuestionContentDTO;
@@ -14,6 +16,7 @@ import com.ayan.answerpass.model.entity.Question;
 import com.ayan.answerpass.model.entity.UserAnswer;
 import com.ayan.answerpass.model.vo.QuestionVO;
 import com.ayan.answerpass.service.QuestionService;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 
@@ -24,11 +27,9 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * AI 测评类应用评分策略
- *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
  */
 @ScoringStrategyConfig(appType = 1, scoringStrategy = 1)
+@Slf4j
 public class AiTestScoringStrategy implements ScoringStrategy {
 
     @Resource
@@ -40,21 +41,13 @@ public class AiTestScoringStrategy implements ScoringStrategy {
     @Resource
     private RedissonClient redissonClient;
 
-    // 分布式锁的 key
     private static final String AI_ANSWER_LOCK = "AI_ANSWER_LOCK";
 
-    /**
-     * AI 评分结果本地缓存
-     */
     private final Cache<String, String> answerCacheMap =
             Caffeine.newBuilder().initialCapacity(1024)
-                    // 缓存 5 分钟移除
                     .expireAfterAccess(5L, TimeUnit.MINUTES)
                     .build();
 
-    /**
-     * AI 评分系统消息
-     */
     private static final String AI_TEST_SCORING_SYSTEM_MESSAGE = "你是一位严谨的判题专家，我会给你如下信息：\n" +
             "```\n" +
             "应用名称，\n" +
@@ -64,11 +57,11 @@ public class AiTestScoringStrategy implements ScoringStrategy {
             "\n" +
             "请你根据上述信息，按照以下步骤来对用户进行评价：\n" +
             "1. 要求：需要给出一个明确的评价结果，包括评价名称（尽量简短）和评价描述（尽量详细，大于 200 字）\n" +
-            "2. 严格按照下面的 json 格式输出评价名称和评价描述\n" +
+            "2. 严格按照下面的 json 格式输出评价名称和评价描述，注意描述内容中的换行请使用\\n表示，引号请使用\\\"转义\n" +
             "```\n" +
             "{\"resultName\": \"评价名称\", \"resultDesc\": \"评价描述\"}\n" +
             "```\n" +
-            "3. 返回格式必须为 JSON 对象";
+            "3. 返回格式必须为 JSON 对象，不要包含任何其他内容";
 
     @Override
     public UserAnswer doScore(List<String> choices, App app) throws Exception {
@@ -76,9 +69,9 @@ public class AiTestScoringStrategy implements ScoringStrategy {
         String jsonStr = JSONUtil.toJsonStr(choices);
         String cacheKey = buildCacheKey(appId, jsonStr);
         String answerJson = answerCacheMap.getIfPresent(cacheKey);
+
         // 如果有缓存，直接返回
         if (StrUtil.isNotBlank(answerJson)) {
-            // 构造返回值，填充答案对象的属性
             UserAnswer userAnswer = JSONUtil.toBean(answerJson, UserAnswer.class);
             userAnswer.setAppId(appId);
             userAnswer.setAppType(app.getAppType());
@@ -87,17 +80,14 @@ public class AiTestScoringStrategy implements ScoringStrategy {
             return userAnswer;
         }
 
-        // 定义锁
         RLock lock = redissonClient.getLock(AI_ANSWER_LOCK + cacheKey);
         try {
-            // 竞争锁
             boolean res = lock.tryLock(3, 15, TimeUnit.SECONDS);
-            // 没抢到锁，强行返回
             if (!res) {
                 return null;
             }
-            // 抢到锁了，执行后续业务逻辑
-            // 1. 根据 id 查询到题目
+
+            // 1. 查询题目
             Question question = questionService.getOne(
                     Wrappers.lambdaQuery(Question.class).eq(Question::getAppId, appId)
             );
@@ -105,42 +95,77 @@ public class AiTestScoringStrategy implements ScoringStrategy {
             List<QuestionContentDTO> questionContent = questionVO.getQuestionContent();
 
             // 2. 调用 AI 获取结果
-            // 封装 Prompt
             String userMessage = getAiTestScoringUserMessage(app, questionContent, choices);
-            // AI 生成
             String result = aiManager.doSyncStableRequest(AI_TEST_SCORING_SYSTEM_MESSAGE, userMessage);
-            // 截取需要的 JSON 信息
-            int start = result.indexOf("{");
-            int end = result.lastIndexOf("}");
-            String json = result.substring(start, end + 1);
 
-            // 缓存结果
+            // 打印原始返回，方便调试
+            log.info("AI原始返回: {}", result);
+
+            // 3. 提取并清理 JSON
+            String json = extractAndCleanJson(result);
+            log.info("清理后的JSON: {}", json);
+
+            // 4. 验证 JSON 格式
+            try {
+                JSONUtil.parseObj(json);
+            } catch (Exception e) {
+                log.error("JSON解析失败，尝试转义特殊字符");
+                // 最后的兜底：手动转义换行符
+                json = json.replace("\n", "\\n").replace("\r", "\\r");
+                json = json.replace("\t", "\\t");
+                try {
+                    JSONUtil.parseObj(json);
+                } catch (Exception e2) {
+                    log.error("JSON仍无法解析，内容: {}", json);
+                    throw new BusinessException(ErrorCode.SYSTEM_ERROR, "AI生成结果格式错误，请重试");
+                }
+            }
+
+            // 5. 缓存结果
             answerCacheMap.put(cacheKey, json);
 
-            // 3. 构造返回值，填充答案对象的属性
+            // 6. 构造返回值
             UserAnswer userAnswer = JSONUtil.toBean(json, UserAnswer.class);
             userAnswer.setAppId(appId);
             userAnswer.setAppType(app.getAppType());
             userAnswer.setScoringStrategy(app.getScoringStrategy());
             userAnswer.setChoices(jsonStr);
             return userAnswer;
+
         } finally {
-            if (lock != null && lock.isLocked()) {
-                if (lock.isHeldByCurrentThread()) {
-                    lock.unlock();
-                }
+            if (lock != null && lock.isLocked() && lock.isHeldByCurrentThread()) {
+                lock.unlock();
             }
         }
+    }
 
+    /**
+     * 从AI返回内容中提取并清理JSON字符串
+     */
+    private String extractAndCleanJson(String result) {
+        if (StrUtil.isBlank(result)) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "AI返回内容为空");
+        }
+
+        // 去掉markdown代码块标记
+        result = result.replaceAll("```json\\s*", "")
+                .replaceAll("```\\s*", "")
+                .trim();
+
+        // 找到JSON对象的起止位置
+        int start = result.indexOf("{");
+        int end = result.lastIndexOf("}");
+
+        if (start == -1 || end == -1 || start >= end) {
+            log.error("未找到有效JSON，原始内容: {}", result);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "AI生成结果格式错误");
+        }
+
+        return result.substring(start, end + 1).trim();
     }
 
     /**
      * AI 评分用户消息封装
-     *
-     * @param app
-     * @param questionContentDTOList
-     * @param choices
-     * @return
      */
     private String getAiTestScoringUserMessage(App app, List<QuestionContentDTO> questionContentDTOList, List<String> choices) {
         StringBuilder userMessage = new StringBuilder();
@@ -157,16 +182,10 @@ public class AiTestScoringStrategy implements ScoringStrategy {
         return userMessage.toString();
     }
 
-
     /**
      * 构建缓存 key
-     *
-     * @param appId
-     * @param choices
-     * @return
      */
     private String buildCacheKey(Long appId, String choices) {
         return DigestUtil.md5Hex(appId + ":" + choices);
     }
-
 }

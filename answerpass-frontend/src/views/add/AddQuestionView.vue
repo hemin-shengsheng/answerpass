@@ -1,8 +1,6 @@
 <template>
   <div id="addquestionpage">
-    <h2 style="margin-bottom: 32px">
-      设置题目</h2>
-    {{ questionContent }}
+    <h2 style="margin-bottom: 32px">设置题目</h2>
     <a-form
       style="max-width: 480px"
       label-align="left"
@@ -14,9 +12,13 @@
         {{ appId }}
       </a-form-item>
       <a-form-item label="题目列表" :content-flex="false" :merge-props="false">
-        <a-button size="small" @click="addQuestion(questionContent.length)">
-          底部添加题目
-        </a-button>
+        <a-space size="medium">
+          <a-button size="small" @click="addQuestion(questionContent.length)">
+            底部添加题目
+          </a-button>
+          <!-- AI生成抽屉 -->
+          <AiGenerateQuestionDrawer :appId="appId" :onSuccess="onAiGenerateSuccess" :onQuestionGenerated="onQuestionGenerated" />
+        </a-space>
         <!-- 遍历每道题目 -->
         <div v-for="(question, index) in questionContent" :key="index">
           <a-space size="large">
@@ -59,7 +61,10 @@
               <a-button size="mini" @click="addQuestionOption(question, optionIndex + 1)"
                 >添加选项</a-button
               >
-              <a-button size="mini" status="danger" @click="deleteQuestionOption(question, optionIndex)"
+              <a-button
+                size="mini"
+                status="danger"
+                @click="deleteQuestionOption(question, optionIndex)"
                 >删除选项</a-button
               >
             </a-space>
@@ -78,7 +83,12 @@
 import { ref, watchEffect } from 'vue';
 import message from '@arco-design/web-vue/es/message';
 import { useRouter } from 'vue-router';
-import { addQuestionUsingPost, editQuestionUsingPost, listQuestionVoByPageUsingPost } from '@/api/questionController';
+import {
+  addQuestionUsingPost,
+  editQuestionUsingPost,
+  listQuestionVoByPageUsingPost,
+} from '@/api/questionController';
+import AiGenerateQuestionDrawer from './components/AiGenerateQuestionDrawer.vue';
 
 interface Props {
   appId: string;
@@ -115,8 +125,8 @@ const addQuestionOption = (question: API.QuestionContentDTO, index: number) => {
   question.options?.splice(index, 0, {
     key: '',
     value: '',
-    result:'',
-    score:0,
+    result: '',
+    score: 0,
   });
 };
 /**
@@ -140,15 +150,15 @@ const loadData = async () => {
   }
   const res = await listQuestionVoByPageUsingPost({
     appId: props.appId,
-    current:1,
-    pageSize:1,
-    sortField:'createTime',
-    sortOrder:'descend',
+    current: 1,
+    pageSize: 1,
+    sortField: 'createTime',
+    sortOrder: 'descend',
   });
   if (res.data.code === 0 && res.data.data?.records) {
     oldQuestion.value = res.data.data?.records[0];
-    if(oldQuestion.value){
-      questionContent.value=oldQuestion.value.questionContent??[];
+    if (oldQuestion.value) {
+      questionContent.value = oldQuestion.value.questionContent ?? [];
     }
   } else {
     message.error('获取数据失败，' + res.data.message);
@@ -157,13 +167,23 @@ const loadData = async () => {
 watchEffect(() => {
   loadData();
 });
-
+/**
+ * AI 生成题目成功后的回调函数
+ * @param result 生成的题目内容
+ */
+const onAiGenerateSuccess = (result: API.QuestionContentDTO[]) => {
+  questionContent.value = [...questionContent.value, ...result];
+  message.success(`AI 生成题目成功，已新增 ${result.length} 道题目`);
+};
+const onQuestionGenerated=(question:API.QuestionContentDTO)=>{
+  questionContent.value.push(question);
+}
 /**
  * 提交表单
  * @param data
  */
 const handleSubmit = async () => {
-  if(!props.appId||!questionContent.value){
+  if (!props.appId || !questionContent.value) {
     return;
   }
   let res;
@@ -171,13 +191,13 @@ const handleSubmit = async () => {
   if (oldQuestion.value?.id) {
     res = await editQuestionUsingPost({
       id: oldQuestion.value?.id,
-      questionContent:questionContent.value,
+      questionContent: questionContent.value,
     });
   } else {
     // 创建
     res = await addQuestionUsingPost({
-      appId:props.appId,
-      questionContent:questionContent.value,
+      appId: props.appId,
+      questionContent: questionContent.value,
     });
   }
   if (res.data.code === 0) {

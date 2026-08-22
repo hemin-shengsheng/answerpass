@@ -30,9 +30,13 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.openai.core.http.StreamResponse;
+import com.openai.models.chat.completions.ChatCompletionChunk;
 
 /**
  * 题目接口
@@ -311,7 +315,7 @@ public class QuestionController {
         // 封装 Prompt
         String userMessage = getGenerateQuestionUserMessage(app, questionNumber, optionNumber);
         // AI 生成
-        String result = aiManager.doSyncRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage, null);
+        String result = aiManager.doSyncStableRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage);
         // 截取需要的 JSON 信息
         int start = result.indexOf("[");
         int end = result.lastIndexOf("]");
@@ -319,109 +323,76 @@ public class QuestionController {
         List<QuestionContentDTO> questionContentDTOList = JSONUtil.toList(json, QuestionContentDTO.class);
         return ResultUtils.success(questionContentDTOList);
     }
+    /**
+     * AI 生成题目 - SSE 流式输出版本
+     * get方法
+     */
+    @GetMapping("/ai_generate/sse")
+    public SseEmitter aiGenerateQuestionSSE(
+            AiGenerateQuestionRequest aiGenerateQuestionRequest) {
 
-//    @GetMapping("/ai_generate/sse")原来glm的写法
-//    public SseEmitter aiGenerateQuestionSSE(AiGenerateQuestionRequest aiGenerateQuestionRequest, HttpServletRequest request) {
-//        ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
-//        // 获取参数
-//        Long appId = aiGenerateQuestionRequest.getAppId();
-//        int questionNumber = aiGenerateQuestionRequest.getQuestionNumber();
-//        int optionNumber = aiGenerateQuestionRequest.getOptionNumber();
-//        // 获取应用信息
-//        App app = appService.getById(appId);
-//        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
-//        // 封装 Prompt
-//        String userMessage = getGenerateQuestionUserMessage(app, questionNumber, optionNumber);
-//        // 建立 SSE 连接对象，0 表示永不超时
-//        SseEmitter sseEmitter = new SseEmitter(0L);
-//        // AI 生成，SSE 流式返回
-//        Flowable<ModelData> modelDataFlowable = aiManager.doStreamRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage, null);
-//        // 左括号计数器，除了默认值外，当回归为 0 时，表示左括号等于右括号，可以截取
-//        AtomicInteger counter = new AtomicInteger(0);
-//        // 拼接完整题目
-//        StringBuilder stringBuilder = new StringBuilder();
-//
-//        // 获取登录用户
-//        User loginUser = userService.getLoginUser(request);
-//        // 默认全局线程池
-//        Scheduler scheduler = Schedulers.io();
-//        if ("vip".equals(loginUser.getUserRole())) {
-//            scheduler = vipScheduler;
-//        }
-//        modelDataFlowable
-//                .observeOn(scheduler)
-//                .map(modelData -> modelData.getChoices().get(0).getDelta().getContent())
-//                .map(message -> message.replaceAll("\\s", ""))
-//                .filter(StrUtil::isNotBlank)
-//                .flatMap(message -> {
-//                    List<Character> characterList = new ArrayList<>();
-//                    for (char c : message.toCharArray()) {
-//                        characterList.add(c);
-//                    }
-//                    return Flowable.fromIterable(characterList);
-//                })
-//                .doOnNext(c -> {
-//                    // 如果是 '{'，计数器 + 1
-//                    if (c == '{') {
-//                        counter.addAndGet(1);
-//                    }
-//                    if (counter.get() > 0) {
-//                        stringBuilder.append(c);
-//                    }
-//                    if (c == '}') {
-//                        counter.addAndGet(-1);
-//                        if (counter.get() == 0) {
-//                            // 可以拼接题目，并且通过 SSE 返回给前端
-//                            sseEmitter.send(JSONUtil.toJsonStr(stringBuilder.toString()));
-//                            // 重置，准备拼接下一道题
-//                            stringBuilder.setLength(0);
-//                        }
-//                    }
-//                })
-//                .doOnError((e) -> log.error("sse error", e))
-//                .doOnComplete(sseEmitter::complete)
-//                .subscribe();
-//        return sseEmitter;
-//    }
-@GetMapping("/ai_generate/sse")
-public BaseResponse<List<QuestionContentDTO>> aiGenerateQuestionSSE(
-        AiGenerateQuestionRequest aiGenerateQuestionRequest, HttpServletRequest request) {
-    ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
-    Long appId = aiGenerateQuestionRequest.getAppId();
-    int questionNumber = aiGenerateQuestionRequest.getQuestionNumber();
-    int optionNumber = aiGenerateQuestionRequest.getOptionNumber();
-    App app = appService.getById(appId);
-    ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
-    String userMessage = getGenerateQuestionUserMessage(app, questionNumber, optionNumber);
+        ThrowUtils.throwIf(aiGenerateQuestionRequest == null, ErrorCode.PARAMS_ERROR);
+        Long appId = aiGenerateQuestionRequest.getAppId();
+        int questionNumber = aiGenerateQuestionRequest.getQuestionNumber();
+        int optionNumber = aiGenerateQuestionRequest.getOptionNumber();
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR);
 
-    // 先用同步方式生成
-    String result = aiManager.doSyncRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage, null);
+        String userMessage = getGenerateQuestionUserMessage(app, questionNumber, optionNumber);
+        SseEmitter emitter = new SseEmitter(0L);
 
-    int start = result.indexOf("[");
-    int end = result.lastIndexOf("]");
-    String json = result.substring(start, end + 1);
-    List<QuestionContentDTO> questionContentDTOList = JSONUtil.toList(json, QuestionContentDTO.class);
-    return ResultUtils.success(questionContentDTOList);
-}
+        new Thread(() -> {
+            try {
+                StreamResponse<ChatCompletionChunk> streamResponse =
+                        aiManager.doStreamRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage, null);
+                AtomicInteger counter = new AtomicInteger(0);
+                StringBuilder stringBuilder = new StringBuilder();
 
+                streamResponse.stream()
+                        .flatMap(chunk -> chunk.choices().stream())
+                        .filter(choice -> choice.delta().content().isPresent())
+                        .map(choice -> choice.delta().content().get())
+                        .forEach(content -> {
+                            for (char c : content.toCharArray()) {
+                                if (c == '{') {
+                                    counter.incrementAndGet();
+                                }
+                                if (counter.get() > 0) {
+                                    stringBuilder.append(c);
+                                }
+                                if (c == '}') {
+                                    counter.decrementAndGet();
+                                    if (counter.get() == 0) {
+                                        try {
+                                            String compactJson = stringBuilder.toString().replaceAll("\\s+", " ");
+                                            emitter.send(SseEmitter.event()
+                                                    .name("question")
+                                                    .data(compactJson));
+                                        } catch (IOException e) {
+                                            log.error("SSE 发送失败", e);
+                                        }
+                                        stringBuilder.setLength(0);
+                                    }
+                                }
+                            }
+                        });
+
+                emitter.send(SseEmitter.event().name("done").data("all_questions_generated"));
+                emitter.complete();
+            } catch (Exception e) {
+                log.error("流式生成题目失败", e);
+                try {
+                    emitter.send(SseEmitter.event().name("error").data(e.getMessage()));
+                } catch (IOException ex) {
+                    log.error("SSE 错误通知失败", ex);
+                }
+                emitter.completeWithError(e);
+            }
+        }).start();
+
+        return emitter;
+    }
     // 仅测试隔离线程池使用，这里后面要加deepseek的测试
 
     // endregion
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
