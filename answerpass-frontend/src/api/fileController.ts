@@ -1,4 +1,3 @@
-// @ts-ignore
 /* eslint-disable */
 import request from '@/request';
 
@@ -40,5 +39,5 @@ export async function uploadFileUsingPost(
     data: formData,
     requestType: 'form',
     ...(options || {}),
-  });
+  }as any);
 }

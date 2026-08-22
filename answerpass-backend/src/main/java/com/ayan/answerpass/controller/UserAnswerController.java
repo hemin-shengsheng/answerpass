@@ -100,9 +100,12 @@ public class UserAnswerController {
             userAnswerWithResult.setId(newUserAnswerId);
             userAnswerWithResult.setAppId(null);
             userAnswerService.updateById(userAnswerWithResult);
+        } catch (BusinessException e) {
+            // 业务异常直接抛出
+            throw e;
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "评分错误");
+            log.error("评分失败", e);
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "评分错误: " + e.getMessage());
         }
         return ResultUtils.success(newUserAnswerId);
     }
