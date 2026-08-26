@@ -132,6 +132,11 @@ export const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: '/app_statistic',
+    name:"应用统计",
+    component:()=>import("@/views/statistic/AppStatistic.vue"),
+  },
+  {
     path: '/noAuth',
     name: '未授权',
     component: () => import('../views/NoAuth.vue'),

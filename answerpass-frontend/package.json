@@ -19,8 +19,10 @@
     "@bytemd/vue-next": "^1.22.0",
     "axios": "^1.16.0",
     "bytemd": "^1.22.0",
+    "echarts": "^6.1.0",
     "pinia": "^2.3.1",
     "vue": "^3.5.13",
+    "vue-echarts": "^8.1.0",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {

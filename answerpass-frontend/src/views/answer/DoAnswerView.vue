@@ -4,7 +4,7 @@
       <h1>{{ app.appName }}</h1>
       <p>{{ app.appDesc }}</p>
       <h2 style="margin-bottom: 16px">
-        {{ current }}、{{ currentQuestion?.title?.replace(/^\d+\.\s*/, "") }}
+        {{ current }}、{{ currentQuestion?.title?.replace(/^\d+\.\s*/, '') }}
       </h2>
       <div>
         <a-radio-group
@@ -33,11 +33,9 @@
             :disabled="!currentAnswer"
             @click="doSubmit"
           >
-            {{ submitting ? "评分中" : "查看结果" }}
+            {{ submitting ? '评分中' : '查看结果' }}
           </a-button>
-          <a-button v-if="current > 1" circle @click="current -= 1">
-            上一题
-          </a-button>
+          <a-button v-if="current > 1" circle @click="current -= 1"> 上一题 </a-button>
         </a-space>
       </div>
     </a-card>
@@ -45,20 +43,12 @@
 </template>
 
 <script setup lang="ts">
-import {
-  computed,
-  reactive,
-  ref,
-  watchEffect,
-} from "vue";
-import { useRouter } from "vue-router";
-import { listQuestionVoByPageUsingPost } from "@/api/questionController";
-import message from "@arco-design/web-vue/es/message";
-import { getAppVoByIdUsingGet } from "@/api/appController";
-import {
-  addUserAnswerUsingPost,
-  generateUserAnswerIdUsingGet,
-} from "@/api/userAnswerController";
+import { computed, reactive, ref, watchEffect } from 'vue';
+import { useRouter } from 'vue-router';
+import { listQuestionVoByPageUsingPost } from '@/api/questionController';
+import message from '@arco-design/web-vue/es/message';
+import { getAppVoByIdUsingGet } from '@/api/appController';
+import { addUserAnswerUsingPost, generateUserAnswerIdUsingGet } from '@/api/userAnswerController';
 
 interface Props {
   appId: number;
@@ -86,7 +76,7 @@ const questionOptions = computed(() => {
     ? currentQuestion.value.options.map((option) => {
         return {
           label: `${option.key}. ${option.value}`,
-          value: option.key??"",
+          value: option.key ?? '',
         };
       })
     : [];
@@ -107,7 +97,7 @@ const generateId = async () => {
   if (res.data.code === 0) {
     id.value = res.data.data;
   } else {
-    message.error("获取唯一 id 失败，" + res.data.message);
+    message.error('获取唯一 id 失败，' + res.data.message);
   }
 };
 
@@ -127,25 +117,25 @@ const loadData = async () => {
   const res = await getAppVoByIdUsingGet({
     id: props.appId,
   });
-  if (res.data.code === 0&&res.data.data) {
+  if (res.data.code === 0 && res.data.data) {
     app.value = res.data.data;
   } else {
-    message.error("获取应用失败，" + res.data.message);
+    message.error('获取应用失败，' + res.data.message);
   }
   // 获取题目
   const questionRes = await listQuestionVoByPageUsingPost({
     appId: props.appId,
     current: 1,
     pageSize: 1,
-    sortField: "createTime",
-    sortOrder: "descend",
+    sortField: 'createTime',
+    sortOrder: 'descend',
   });
   if (questionRes.data.code === 0 && questionRes.data.data?.records) {
-    questionContent.value = questionRes.data.data.records[0].questionContent??[];
+    questionContent.value = questionRes.data.data.records[0].questionContent ?? [];
   } else {
-    message.error("获取题目失败，" + questionRes.data.message);
+    message.error('获取题目失败，' + questionRes.data.message);
   }
-;}
+};
 
 // 获取旧数据
 watchEffect(() => {
@@ -162,7 +152,7 @@ watchEffect(() => {
  * 选中选项后，保存选项记录
  * @param value
  */
-const doRadioChange = (value: string|number|boolean) => {
+const doRadioChange = (value: string | number | boolean) => {
   answerList[current.value - 1] = value as string;
 };
 
@@ -174,25 +164,25 @@ const doSubmit = async () => {
     return;
   }
   submitting.value = true;
-  try{
+  try {
     const res = await addUserAnswerUsingPost({
-    appId: props.appId,
-    choices: answerList,
-    id: id.value,
-  });
-  if (res.data.code === 0 && res.data.data) {
-    router.push(`/answer/result/${res.data.data}`);
-  } else {
-    message.error("提交答案失败，" + res.data.message);
-  }
-  }catch(error){
-    if(error instanceof Error&&error.message?.includes('fetch')){
-      message.error("网络连接失败，请检查网络后重试");
-    }else{
-      message.error("提交失败，请稍后重试");
+      appId: props.appId,
+      choices: answerList,
+      id: id.value,
+    });
+    if (res.data.code === 0 && res.data.data) {
+      router.push(`/answer/result/${res.data.data}`);
+    } else {
+      message.error('提交答案失败，' + res.data.message);
     }
-  }finally{
-    submitting.value=false;
+  } catch (error) {
+    if (error instanceof Error && error.message?.includes('fetch')) {
+      message.error('网络连接失败，请检查网络后重试');
+    } else {
+      message.error('提交失败，请稍后重试');
+    }
+  } finally {
+    submitting.value = false;
   }
 };
 </script>

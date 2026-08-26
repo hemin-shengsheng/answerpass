@@ -280,7 +280,7 @@ declare namespace API {
 
   type getAppAnswerResultCountUsingGETParams = {
     /** appId */
-    appId?: number;
+    appId?: string|number;
   };
 
   type getAppVOByIdUsingGETParams = {
