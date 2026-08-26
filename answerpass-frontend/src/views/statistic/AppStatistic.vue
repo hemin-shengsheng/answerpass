@@ -23,7 +23,7 @@ import {
   getAppAnswerCountUsingGet,
   getAppAnswerResultCountUsingGet,
 } from '@/api/appStatisticController';
-import { computed, ref, watchEffect } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { Message } from '@arco-design/web-vue';
 
 const appAnswerCountList = ref<API.AppAnswerCountDTO[]>([]);
@@ -56,12 +56,11 @@ const loadAppAnswerResultCountData = async (appId: string | number) => {
   }
 };
 /**
- * 监听变量，数据改变时触发重新加载
+ * 页面加载时初始化数据
  */
-watchEffect(() => {
-  loadAppAnswerCountData();
-  loadAppAnswerResultCountData('');
-});
+onMounted(()=>{
+  loadAppAnswerCountData()
+})
 /**
  * 应用数据图表
  */
