@@ -3,7 +3,7 @@ package com.ayan.answerpass.model.dto.statistic;
 import lombok.Data;
 
 /**
- * App 用户提交答案书统计
+ * App 用户提交答案数统计
  */
 @Data
 public class AppAnswerCountDTO {
