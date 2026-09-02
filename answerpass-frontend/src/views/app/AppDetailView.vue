@@ -24,7 +24,7 @@
           </p>
           <a-space size="large">
             <a-button type="primary" :href="`/answer/do/${props.id}`">开始答题</a-button>
-            <a-button>分享应用</a-button>
+            <a-button @click="doShare">分享应用</a-button>
             <a-button v-if="isMy" :href="`/add/question/${props.id}`">设置题目</a-button>
             <a-button v-if="isMy" :href="`/add/scoring_result/${props.id}`">设置评分</a-button>
             <a-button v-if="isMy" @click="editApp">修改应用</a-button>
@@ -36,6 +36,7 @@
       </a-row>
     </a-card>
   </div>
+  <ShareModal ref="shareModalRef" :link="shareLink" title="应用分享"/>
 </template>
 
 <script setup lang="ts">
@@ -49,6 +50,7 @@ import { useRouter } from 'vue-router';
 type NumberKeyMap={[key:number]:string};
 const AppTypeMap:NumberKeyMap=APP_TYPE_MAP;
 const AppScoringStrategyMap:NumberKeyMap=APP_SCORING_STRATEGY_MAP;
+import ShareModal from '@/components/ShareModal.vue';
 
 interface Props {
   id: number;
@@ -94,6 +96,15 @@ watchEffect(() => {
   loadData();
 });
 
+// 分享弹窗使用
+const shareModalRef=ref();
+const shareLink=`${window.location.protocol}//${window.location.host}/app/detail/${props.id}`;
+const doShare=(e:Event)=>{
+  if(shareModalRef.value){
+    shareModalRef.value.openModal();
+  }
+  e.stopPropagation();
+}
 </script>
 
 <style scoped>
