@@ -80,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watchEffect } from 'vue';
+import { ref,watch, onMounted } from 'vue';
 import message from '@arco-design/web-vue/es/message';
 import { useRouter } from 'vue-router';
 import {
@@ -215,15 +215,22 @@ const loadData = async () => {
     message.error('获取数据失败，' + res.data.message);
   }
 };
-watchEffect(() => {
+// 进入页面加载数据
+onMounted(() => {
   loadData();
 });
+// 深度监听 questionContent 的变化，自动保存状态
+watch(questionContent,()=>{
+  saveDraft();
+},{deep:true});
+
 /**
  * AI 生成题目成功后的回调函数
  * @param result 生成的题目内容
  */
 const onAiGenerateSuccess = (result: API.QuestionContentDTO[]) => {
   questionContent.value = [...questionContent.value, ...result];
+  saveDraft();
   message.success(`AI 生成题目成功，已新增 ${result.length} 道题目`);
 };
 const onQuestionGenerated=(question:API.QuestionContentDTO)=>{

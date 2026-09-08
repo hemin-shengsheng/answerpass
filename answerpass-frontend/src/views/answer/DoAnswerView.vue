@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch, watchEffect } from 'vue';
+import { computed, onMounted, reactive, ref, watch, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
 import { listQuestionVoByPageUsingPost } from '@/api/questionController';
 import message from '@arco-design/web-vue/es/message';
@@ -210,7 +210,7 @@ const loadData = async () => {
 };
 
 // 获取旧数据
-watchEffect(() => {
+onMounted(() => {
   loadData();
 });
 
