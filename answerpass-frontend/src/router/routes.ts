@@ -63,31 +63,27 @@ export const routes: Array<RouteRecordRaw> = [
     },
     children: [
       {
-        path: '',
-        redirect: '/admin/question',
-      },
-      {
-        path: '/admin/user',
+        path: 'user',
         name: '用户管理',
         component: () => import('../views/admin/AdminUserView.vue'),
       },
       {
-        path: '/admin/app',
+        path: 'app',
         name: '应用管理',
         component: () => import('../views/admin/AdminAppview.vue'),
       },
       {
-        path: '/admin/question',
+        path: 'question',
         name: '题目管理',
         component: () => import('../views/admin/AdminQuestionView.vue'),
       },
       {
-        path: '/admin/scoring_result',
+        path: 'scoring_result',
         name: '评分管理',
         component: () => import('../views/admin/AdminScoringResultView.vue'),
       },
       {
-        path: '/admin/user_answer',
+        path: 'user_answer',
         name: '回答管理',
         component: () => import('../views/admin/AdminUserAnswerView.vue'),
       },
