@@ -34,7 +34,12 @@ const appAnswerResultCountList = ref<API.AppAnswerResultCountDTO[]>([]);
 const loadAppAnswerCountData = async () => {
   const res = await getAppAnswerCountUsingGet();
   if (res.data.code === 0) {
-    appAnswerCountList.value = res.data.data || [];
+    appAnswerCountList.value = (res.data.data || []).map(item => {
+      return {
+        appId: item.appId,
+        answerCount: Number(item.answerCount),
+      };
+    });
   } else {
     Message.error('获取数据失败' + res.data.message);
   }

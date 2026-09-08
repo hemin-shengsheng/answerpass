@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watchEffect } from 'vue';
+import { computed, onMounted, reactive, ref, watch, watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
 import { listQuestionVoByPageUsingPost } from '@/api/questionController';
 import message from '@arco-design/web-vue/es/message';
@@ -91,20 +91,80 @@ const submitting = ref(false);
 // 唯一 id
 const id = ref<number>();
 
+// 答题状态持久化
+/**
+ * 每个应用拥有独立的答题状态 key
+ */
+const getStateKey=()=>{
+  return `answerPageState_${props.appId}`;
+}
+// 定义要持久化的数据结构
+interface AnswerPageState{
+  id?:number;
+  questionContent:API.QuestionContentDTO[];
+  current:number;
+  answerList:string[];
+}
+/**
+ * 从 sessionStorage 恢复状态
+ */
+const restoreState=():AnswerPageState|null=>{
+  try{
+    const saved=sessionStorage.getItem(getStateKey());
+    if(saved){
+      return JSON.parse(saved);
+    }
+  }catch(e){
+    console.error("恢复答题状态失败",e);
+  }
+  return null;
+}
+/**
+ * 保存状态到 sessionStorage
+ */
+const saveState=()=>{
+  // 只有题目加载完成且 id 生成后才保存，避免保存空数据
+  if(!questionContent.value.length||!id.value){
+    return;
+  }
+  try{
+    const state:AnswerPageState={
+      id:id.value,
+      questionContent:questionContent.value,
+      current:current.value,
+      answerList:[...answerList],
+    };
+    sessionStorage.setItem(getStateKey(),JSON.stringify(state));
+  }catch(e){
+    console.error("保存答题状态失败",e);
+  }
+}
+/**
+ * 清除状态
+ */
+const clearState=()=>{
+  try{
+    sessionStorage.removeItem(getStateKey());
+  }catch(e){
+    console.error("清除答题状态失败",e);
+  }
+}
+
 // 生成唯一 id
 const generateId = async () => {
+  // 如果已经有 id 了，不重复生成
+  if(id.value){
+    return;
+  }
   const res = await generateUserAnswerIdUsingGet();
   if (res.data.code === 0) {
     id.value = res.data.data;
+    // id 生成后保存一次状态
+    saveState();
   } else {
     message.error('获取唯一 id 失败，' + res.data.message);
   }
 };
-
-// 进入页面时，生成唯一 id
-watchEffect(() => {
-  generateId();
-});
 
 /**
  * 加载数据
@@ -113,6 +173,16 @@ const loadData = async () => {
   if (!props.appId) {
     return;
   }
+  // 先尝试恢复状态
+  const savedState=restoreState();
+  if(savedState){
+    id.value=savedState.id;
+    questionContent.value=savedState.questionContent;
+    current.value=savedState.current;
+    answerList.splice(0,answerList.length,...savedState.answerList);
+    return;
+  }
+  // 没有恢复数据，走正常加载流程
   // 获取 app
   const res = await getAppVoByIdUsingGet({
     id: props.appId,
@@ -132,13 +202,15 @@ const loadData = async () => {
   });
   if (questionRes.data.code === 0 && questionRes.data.data?.records) {
     questionContent.value = questionRes.data.data.records[0].questionContent ?? [];
+    // 题目加载完成后生成 id
+    await generateId();
   } else {
     message.error('获取题目失败，' + questionRes.data.message);
   }
 };
 
 // 获取旧数据
-watchEffect(() => {
+onMounted(() => {
   loadData();
 });
 
@@ -148,12 +220,18 @@ watchEffect(() => {
   currentAnswer.value = answerList[current.value - 1];
 });
 
+// 监听 current 和 answerList 的变化，自动保存状态
+watch([current,answerList],()=>{
+  saveState();
+},{deep:true});
+
 /**
  * 选中选项后，保存选项记录
  * @param value
  */
 const doRadioChange = (value: string | number | boolean) => {
   answerList[current.value - 1] = value as string;
+  saveState();
 };
 
 /**
@@ -171,6 +249,8 @@ const doSubmit = async () => {
       id: id.value,
     });
     if (res.data.code === 0 && res.data.data) {
+      // 提交成功后清除保存的状态
+      clearState();
       router.push(`/answer/result/${res.data.data}`);
     } else {
       message.error('提交答案失败，' + res.data.message);
