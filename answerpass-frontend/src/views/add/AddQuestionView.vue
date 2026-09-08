@@ -100,6 +100,46 @@ const props = withDefaults(defineProps<Props>(), {
 });
 // 题目结构内容，理解为题目列表
 const questionContent = ref<API.QuestionContentDTO[]>([]);
+// sessionStorage 会话存储
+// 草稿持久化--可以在用户离开页面后，保留用户的编辑内容
+// 每个应用拥有独立的草稿 key
+const getDraftKey=()=>{
+  return `questionEditDraft_${props.appId}`;
+};
+/**
+ * 从 sessionStorage 恢复草稿
+ */
+const restoreDraft=():API.QuestionContentDTO[]|null=>{
+  try{
+    const saved=sessionStorage.getItem(getDraftKey());
+    if(saved){
+      return JSON.parse(saved);
+    }
+  }catch(e){
+    console.error('恢复草稿失败',e);
+  }
+  return null;
+}
+/**
+ * 保存草稿到 sessionStorage
+ */
+const saveDraft=()=>{
+  try{
+    sessionStorage.setItem(getDraftKey(),JSON.stringify(questionContent.value));
+  }catch(e){
+    console.error("保存草稿失败",e);
+  }
+}
+/**
+ * 清除草稿
+ */
+const clearDraft=()=>{
+  try{
+    sessionStorage.removeItem(getDraftKey());
+  }catch(e){
+    console.error("清除草稿失败",e);
+  }
+}
 /**
  * 添加题目
  * @param index
@@ -109,6 +149,7 @@ const addQuestion = (index: number) => {
     title: '',
     options: [],
   });
+  saveDraft();
 };
 /**
  * 删除题目
@@ -116,6 +157,7 @@ const addQuestion = (index: number) => {
  */
 const deleteQuestion = (index: number) => {
   questionContent.value.splice(index, 1);
+  saveDraft();
 };
 /**
  * 添加题目选项
@@ -128,6 +170,7 @@ const addQuestionOption = (question: API.QuestionContentDTO, index: number) => {
     result: '',
     score: 0,
   });
+  saveDraft();
 };
 /**
  * 删除题目选项
@@ -138,6 +181,7 @@ const deleteQuestionOption = (question: API.QuestionContentDTO, index: number) =
     question.options = [];
   }
   question.options.splice(index, 1);
+  saveDraft();
 };
 const router = useRouter();
 const oldQuestion = ref<API.QuestionVO>();
@@ -148,6 +192,13 @@ const loadData = async () => {
   if (!props.appId) {
     return;
   }
+  // 先尝试恢复草稿
+  const draft=restoreDraft();
+  if(draft){
+    questionContent.value=draft;
+    return;
+  }
+  // 没有草稿，正常从后端加载
   const res = await listQuestionVoByPageUsingPost({
     appId: props.appId,
     current: 1,
@@ -177,6 +228,7 @@ const onAiGenerateSuccess = (result: API.QuestionContentDTO[]) => {
 };
 const onQuestionGenerated=(question:API.QuestionContentDTO)=>{
   questionContent.value.push(question);
+  saveDraft();
 }
 /**
  * 提交表单
@@ -201,6 +253,8 @@ const handleSubmit = async () => {
     });
   }
   if (res.data.code === 0) {
+    // 提交成功后清除草稿
+    clearDraft();
     message.success('操作成功，即将跳转到应用详情页');
     setTimeout(() => {
       const appId = props.appId ?? res.data.data;
