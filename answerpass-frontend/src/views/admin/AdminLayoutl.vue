@@ -12,7 +12,6 @@
           @menu-item-click="handleMenuClick"
         >
           <a-menu-item v-for="item in adminRoutes" :key="item.path">
-            <component :is="item.meta?.icon" v-if="item.meta?.icon" />
             <span>{{ item.name }}</span>
           </a-menu-item>
         </a-menu>
@@ -55,9 +54,10 @@ watch(
     selectedKeys.value = [newPath];
   },
 );
-
-const handleMenuClick = ({ key }: { key: string }) => {
-  router.push(key);
+const handleMenuClick = (key: string) => {
+  router.push({
+    path: key,
+  });
 };
 </script>
 
