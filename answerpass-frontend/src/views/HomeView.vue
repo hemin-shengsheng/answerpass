@@ -5,7 +5,11 @@
        placeholder="快速发现答题应用" 
        button-text="搜索" 
        size="large"
-       search-button/>
+       search-button
+       allow-clear
+       @search="doSearch"
+       @clear="doClear"
+       />
     </div>
   <a-list
     class="list-demo-action-layout"
@@ -60,6 +64,25 @@ const loadData = async () => {
   } else {
     message.error("获取数据失败，" + res.data.message);
   }
+};
+
+/**
+ * 执行搜索
+ * @param value 搜索关键词
+ */
+const doSearch = (value: string) => {
+  searchParams.value = {
+    ...initSearchParams,
+    searchText: value,
+  };
+};
+/**
+ * 清空搜索
+ */
+const doClear = () => {
+  searchParams.value = {
+    ...initSearchParams,
+  };
 };
 
 /**
