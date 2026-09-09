@@ -160,4 +160,13 @@ export const routes: Array<RouteRecordRaw> = [
       },
     ],
   },
+  {
+    path:'/user/profile',
+    name:"个人中心",
+    component:()=>import('@/views/user/UserProfileView.vue'),
+    meta:{
+      hideInMenu:true,
+      access:ACCESS_ENUM.USER,
+    }
+  }
 ];
